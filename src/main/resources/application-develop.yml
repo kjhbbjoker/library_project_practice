@@ -1,0 +1,26 @@
+spring:
+  config:
+    activate:
+      on-profile: db-develop
+
+  datasource:
+      url: jdbc:mysql://localhost:3306/wsa_mes_library?useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&allowPublicKeyRetrieval=true
+      username: root
+      password: rlawhdgns4!
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # JPA 공통 설정
+  jpa:
+    defer-datasource-initialization: true
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: false
+        show_sql: false
+        use_sql_comments: false
+        default_batch_fetch_size: 20
+    hibernate:
+      ddl-auto: update
+
+server:
+  port: 8083

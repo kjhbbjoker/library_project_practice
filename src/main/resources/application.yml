@@ -1,0 +1,17 @@
+
+
+spring:
+  profiles:
+    group:
+      develop:
+        - db-develop
+      deploy:
+        - db-deploy
+      test:
+        - db-test
+  mvc:
+    path match:
+      matching-strategy: ant_path_matcher
+
+  application:
+    name: influx-sever
