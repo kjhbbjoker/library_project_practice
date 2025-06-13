@@ -50,8 +50,8 @@ Spring Boot와 React TypeScript로 구현된 도서관 관리 시스템입니다
 ## 🏗 프로젝트 구조
 
 ```
-wsa_mes_library/
-├── src/main/java/com/example/wsa_mes_library/
+library_project_practice/
+├── src/main/java/com/example/library_project_practice/
 │   ├── config/          # 설정 파일들
 │   ├── controller/      # REST API 컨트롤러
 │   ├── entity/          # JPA 엔티티
@@ -196,7 +196,7 @@ npm run test
 
 - **개발자**: WSA MES Library Team
 - **이메일**: whdg1234@gmail.com
-- **GitHub**: [[프로젝트 저장소 URL]](https://github.com/kjhbbjoker/library_project_practice)
+- **GitHub**: [[https://github.com/kjhbbjoker/library_project_practice]](https://github.com/kjhbbjoker/library_project_practice)
 
 ## 🔮 향후 개발 계획
 
