@@ -2,6 +2,7 @@ package com.example.wsa_mes_library.service;
 
 import com.example.wsa_mes_library.entity.Book;
 import com.example.wsa_mes_library.repository.BookQueryRepository;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -134,7 +136,7 @@ public class BookService {
      */
     public long getTotalActiveBookCount() {
         log.debug("전체 활성 책 개수 조회");
-        
+
         long count = bookQueryRepository.count(bookQueryRepository.getQEntity().active.eq(true));
         log.debug("전체 활성 책 개수: {}", count);
         
@@ -219,5 +221,17 @@ public class BookService {
         // 간단한 ISBN 형식 검증 (하이픈 포함 13자리 또는 10자리)
         String cleanIsbn = isbn.replaceAll("-", "");
         return cleanIsbn.length() == 10 || cleanIsbn.length() == 13;
+    }
+
+    /**
+     * ID 기반 커서로 책 목록 조회 (무한 스크롤용)
+     *
+     * @param lastId 마지막으로 본 책 ID (null이면 첫 요청)
+     * @param size 가져올 개수 (기본 20개)
+     * @return 책 목록 (ID 내림차순)
+     */
+    public List<Book> getBooksForInfiniteScroll(Long lastId, Integer size) {
+        int limitSize = (size != null && size > 0) ? Math.min(size, 100) : 20; // 최대 100개 제한
+        return bookQueryRepository.findByIdCursor(lastId, limitSize);
     }
 }

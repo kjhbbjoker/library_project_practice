@@ -47,7 +47,6 @@ public class BookQueryRepository implements QueryRepository<Book, QBook> {
     public Page<Book> findActiveBooks(Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(qBook.active.eq(true));
-        
         return findPage(builder, pageable); // Spring Data Sort 자동 적용!
     }
     

@@ -9,6 +9,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -39,7 +40,7 @@ public class BookController {
     public ResponseEntity<Page<Book>> getBooks(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String author,
-            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable
+            @PageableDefault(size = 1000, sort = "createdAt") Pageable pageable
     ) {
         Page<Book> books = bookService.getBooks(keyword, author, pageable);
         return ResponseEntity.ok(books);
@@ -156,5 +157,16 @@ public class BookController {
         return hasBooks 
                 ? ResponseEntity.ok().build() 
                 : ResponseEntity.notFound().build();
+    }
+
+
+    // 이후 요청용
+    @GetMapping("/infinite")
+    public ResponseEntity<List<Book>> getBooksForInfiniteScroll(
+            @RequestParam(required = false, name = "lastId") Long lastId,
+            @RequestParam(required = false, defaultValue = "20") Integer size
+    ) {
+        List<Book> books = bookService.getBooksForInfiniteScroll(lastId, size);
+        return ResponseEntity.ok(books);
     }
 }

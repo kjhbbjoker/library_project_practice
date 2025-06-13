@@ -9,17 +9,22 @@ import com.querydsl.core.types.dsl.EntityPathBase;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * QueryDSL 전용 Repository 인터페이스
  * Q클래스 기반 설계 + BooleanBuilder 중심 + Spring Data Sort 자동 지원
  */
 public interface QueryRepository<T extends BaseEntity, Q extends EntityPathBase<T>> {
+    
+    Logger log = LoggerFactory.getLogger(QueryRepository.class);
     
     /**
      * JPAQueryFactory 반환 (구현체에서 제공)
@@ -155,7 +160,7 @@ public interface QueryRepository<T extends BaseEntity, Q extends EntityPathBase<
                 );
                 query.orderBy(orderSpec);
             } catch (Exception e) {
-                System.err.println("정렬 실패: " + order.getProperty() + " - 무시");
+                log.warn("정렬 적용 실패 - 필드: {}, 오류: {}", order.getProperty(), e.getMessage());
             }
         });
     }
@@ -198,5 +203,44 @@ public interface QueryRepository<T extends BaseEntity, Q extends EntityPathBase<
      */
     default Page<T> findAll(Pageable pageable) {
         return findPage(new BooleanBuilder(), pageable);
+    }
+    
+    /**
+     * ID 기반 커서 페이징 (무한 스크롤용)
+     * @param lastId 마지막으로 본 ID (null이면 처음부터)
+     * @param limit 가져올 개수
+     * @param builder 추가 조건 (선택사항)
+     * @return ID보다 작은 데이터들을 ID 내림차순으로 반환
+     */
+    default List<T> findByIdCursor(Long lastId, int limit, BooleanBuilder builder) {
+        JPAQueryFactory queryFactory = getQueryFactory();
+        Q qEntity = getQEntity();
+        
+        JPAQuery<T> query = queryFactory.selectFrom(qEntity);
+        
+        // 기본 조건 적용
+        if (builder != null && builder.hasValue()) {
+            query.where(builder);
+        }
+        
+        // ID 커서 조건 추가
+        if (lastId != null) {
+            // PathBuilder로 ID 필드 접근
+            PathBuilder<T> pathBuilder = new PathBuilder<>(qEntity.getType(), qEntity.toString());
+            query.where(pathBuilder.getNumber("id", Long.class).lt(lastId));
+        }
+        
+        return query
+            .orderBy(new OrderSpecifier<>(Order.DESC, 
+                new PathBuilder<>(qEntity.getType(), qEntity.toString()).getNumber("id", Long.class)))
+            .limit(limit)
+            .fetch();
+    }
+    
+    /**
+     * ID 기반 커서 페이징 (조건 없음)
+     */
+    default List<T> findByIdCursor(Long lastId, int limit) {
+        return findByIdCursor(lastId, limit, null);
     }
 }
