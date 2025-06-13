@@ -196,7 +196,7 @@ npm run test
 
 - **개발자**: WSA MES Library Team
 - **이메일**: whdg1234@gmail.com
-- **GitHub**: [프로젝트 저장소 URL]
+- **GitHub**: [[프로젝트 저장소 URL]](https://github.com/kjhbbjoker/library_project_practice)
 
 ## 🔮 향후 개발 계획
 
