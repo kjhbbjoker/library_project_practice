@@ -1,6 +1,5 @@
-package com.example.wsa_mes_library.common;
+package com.example.wsa_mes_library.lib;
 
-import com.example.wsa_mes_library.lib.BaseEntity;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
@@ -16,7 +15,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * QueryDSL 전용 Repository 인터페이스

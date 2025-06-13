@@ -1,6 +1,6 @@
 package com.example.wsa_mes_library.repository;
 
-import com.example.wsa_mes_library.common.QueryRepository;
+import com.example.wsa_mes_library.lib.QueryRepository;
 import com.example.wsa_mes_library.entity.Book;
 import com.example.wsa_mes_library.entity.QBook;
 import com.querydsl.core.BooleanBuilder;
@@ -125,5 +125,39 @@ public class BookQueryRepository implements QueryRepository<Book, QBook> {
         }
         
         return findPage(builder, pageable);
+    }
+    
+    /**
+     * ISBN 존재 여부 확인
+     */
+    public boolean existsByIsbn(String isbn) {
+        if (!StringUtils.hasText(isbn)) {
+            return false;
+        }
+        
+        return queryFactory
+            .selectFrom(qBook)
+            .where(qBook.active.eq(true)
+                   .and(qBook.isbn.eq(isbn)))
+            .fetchFirst() != null;
+    }
+    
+    /**
+     * ID 커서 기반 페이징 (무한 스크롤용)
+     */
+    public java.util.List<Book> findByIdCursor(Long lastId, int size) {
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(qBook.active.eq(true));
+        
+        if (lastId != null) {
+            builder.and(qBook.id.lt(lastId));
+        }
+        
+        return queryFactory
+            .selectFrom(qBook)
+            .where(builder)
+            .orderBy(qBook.id.desc())
+            .limit(size)
+            .fetch();
     }
 }

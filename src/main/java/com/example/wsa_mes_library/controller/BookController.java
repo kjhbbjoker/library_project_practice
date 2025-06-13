@@ -169,4 +169,41 @@ public class BookController {
         List<Book> books = bookService.getBooksForInfiniteScroll(lastId, size);
         return ResponseEntity.ok(books);
     }
+    
+    /**
+     * 새 책 등록
+     * 
+     * @param book 등록할 책 정보
+     * @return 등록된 책 정보
+     */
+    @PostMapping
+    public ResponseEntity<Book> createBook(@RequestBody Book book) {
+        Book createdBook = bookService.createBook(book);
+        return ResponseEntity.status(201).body(createdBook);
+    }
+    
+    /**
+     * 책 정보 수정
+     * 
+     * @param id 수정할 책 ID
+     * @param book 수정할 정보
+     * @return 수정된 책 정보
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book book) {
+        Book updatedBook = bookService.updateBook(id, book);
+        return ResponseEntity.ok(updatedBook);
+    }
+    
+    /**
+     * 책 삭제
+     * 
+     * @param id 삭제할 책 ID
+     * @return 삭제 결과
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
+        bookService.deleteBook(id);
+        return ResponseEntity.noContent().build();
+    }
 }

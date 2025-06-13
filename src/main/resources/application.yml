@@ -1,6 +1,7 @@
-
-
 spring:
+  application:
+    name: wsa-mes-library
+  
   profiles:
     group:
       develop:
@@ -9,9 +10,45 @@ spring:
         - db-deploy
       test:
         - db-test
+    default: develop
+  
   mvc:
     path match:
       matching-strategy: ant_path_matcher
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/wsa_mes_library?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: 
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
-  application:
-    name: influx-sever
+# Swagger UI 설정
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    groups-order: DESC
+    operationsSorter: method
+    disable-swagger-default-url: true
+    display-request-duration: true
+  api-docs:
+    path: /api-docs
+  show-actuator: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  
+# 로깅 설정
+logging:
+  level:
+    com.example.wsa_mes_library: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE

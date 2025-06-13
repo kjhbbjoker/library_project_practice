@@ -2,6 +2,7 @@ package com.example.wsa_mes_library.service;
 
 import com.example.wsa_mes_library.entity.Book;
 import com.example.wsa_mes_library.repository.BookQueryRepository;
+import com.example.wsa_mes_library.repository.BookRepository;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,8 @@ import java.util.Optional;
 public class BookService {
     
     private final BookQueryRepository bookQueryRepository;
+
+    private final BookRepository bookRepository;
     
     /**
      * 책 목록 조회 (비즈니스 로직 포함)
@@ -233,5 +236,125 @@ public class BookService {
     public List<Book> getBooksForInfiniteScroll(Long lastId, Integer size) {
         int limitSize = (size != null && size > 0) ? Math.min(size, 100) : 20; // 최대 100개 제한
         return bookQueryRepository.findByIdCursor(lastId, limitSize);
+    }
+    
+    /**
+     * 새 책 등록
+     * 
+     * @param book 등록할 책 정보
+     * @return 등록된 책
+     */
+    @Transactional
+    public Book createBook(Book book) {
+        log.debug("새 책 등록: {}", book.getName());
+        
+        // 비즈니스 로직: 필수 정보 검증
+        validateBookData(book);
+        
+        // ISBN 중복 체크
+        if (StringUtils.hasText(book.getIsbn()) &&
+            bookQueryRepository.existsByIsbn(book.getIsbn())) {
+            throw new IllegalArgumentException("이미 존재하는 ISBN입니다: " + book.getIsbn());
+        }
+        
+        // 기본값 설정
+        if (book.getAvailable() == null) {
+            book.setAvailable(true);
+        }
+        
+        Book savedBook = bookRepository.save(book);
+        log.info("새 책 등록 완료 - ID: {}, 제목: {}", savedBook.getId(), savedBook.getName());
+        
+        return savedBook;
+    }
+    
+    /**
+     * 책 정보 수정
+     * 
+     * @param id 수정할 책 ID
+     * @param bookDetails 수정할 정보
+     * @return 수정된 책
+     */
+    @Transactional
+    public Book updateBook(Long id, Book bookDetails) {
+        log.debug("책 정보 수정 - ID: {}", id);
+        
+        Book book = getBookById(id)
+            .orElseThrow(() -> new IllegalArgumentException("책을 찾을 수 없습니다: " + id));
+        
+        // 비즈니스 로직: 수정 정보 검증
+        validateBookData(bookDetails);
+        
+        // ISBN 변경 시 중복 체크
+        if (!book.getIsbn().equals(bookDetails.getIsbn()) && 
+            StringUtils.hasText(bookDetails.getIsbn()) &&
+            bookQueryRepository.existsByIsbn(bookDetails.getIsbn())) {
+            throw new IllegalArgumentException("이미 존재하는 ISBN입니다: " + bookDetails.getIsbn());
+        }
+        
+        // 정보 업데이트
+        book.setName(bookDetails.getName());
+        book.setAuthor(bookDetails.getAuthor());
+        book.setIsbn(bookDetails.getIsbn());
+        book.setDescription(bookDetails.getDescription());
+        book.setPublisher(bookDetails.getPublisher());
+        book.setPublishYear(bookDetails.getPublishYear());
+        
+        Book updatedBook = bookRepository.save(book);
+        log.info("책 정보 수정 완료 - ID: {}, 제목: {}", updatedBook.getId(), updatedBook.getName());
+        
+        return updatedBook;
+    }
+    
+    /**
+     * 책 삭제 (소프트 삭제)
+     * 
+     * @param id 삭제할 책 ID
+     */
+    @Transactional
+    public void deleteBook(Long id) {
+        log.debug("책 삭제 - ID: {}", id);
+        
+        Book book = getBookById(id)
+            .orElseThrow(() -> new IllegalArgumentException("책을 찾을 수 없습니다: " + id));
+        
+        // 비즈니스 로직: 대출 중인 책은 삭제 불가
+        if (!book.isAvailable()) {
+            throw new IllegalStateException("대출 중인 책은 삭제할 수 없습니다.");
+        }
+        
+        // 소프트 삭제
+        book.setActive(false);
+        bookRepository.save(book);
+        
+        log.info("책 삭제 완료 - ID: {}, 제목: {}", book.getId(), book.getName());
+    }
+    
+    /**
+     * 책 데이터 검증
+     * 
+     * @param book 검증할 책 데이터
+     */
+    private void validateBookData(Book book) {
+        if (book == null) {
+            throw new IllegalArgumentException("책 정보가 필요합니다.");
+        }
+        
+        if (!StringUtils.hasText(book.getName())) {
+            throw new IllegalArgumentException("책 제목은 필수입니다.");
+        }
+        
+        if (!StringUtils.hasText(book.getAuthor())) {
+            throw new IllegalArgumentException("저자는 필수입니다.");
+        }
+        
+        if (StringUtils.hasText(book.getIsbn()) && !isValidIsbn(book.getIsbn())) {
+            throw new IllegalArgumentException("올바른 ISBN 형식이 아닙니다.");
+        }
+        
+        if (book.getPublishYear() != null && 
+            (book.getPublishYear() < 1000 || book.getPublishYear() > java.time.Year.now().getValue())) {
+            throw new IllegalArgumentException("올바른 출판연도가 아닙니다.");
+        }
     }
 }
